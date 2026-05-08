@@ -1,0 +1,23 @@
+Voeg hier je snippet-foto's toe.
+Elke foto moet de juiste bestandsnaam hebben (JPG).
+
+De bestandsnamen zijn:
+  ui-snipperen.jpg
+  knoflook-hakken.jpg
+  julienne.jpg
+  brunoise.jpg
+  mes-vasthouden.jpg
+  water-koken.jpg
+  pasta-koken.jpg
+  eieren-koken.jpg
+  blancheren.jpg
+  pan-opwarmen.jpg
+  ui-fruiten.jpg
+  vlees-aanbraden.jpg
+  dressing-maken.jpg
+  deeg-kneden.jpg
+  handen-wassen.jpg
+  werkplek.jpg
+
+Zolang een foto ontbreekt, wordt er een emoji getoond als placeholder.
+De app werkt volledig zonder foto's — voeg ze toe wanneer je wilt.

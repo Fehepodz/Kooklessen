@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kooklessen — Recepten</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div class="header-inner">
+        <button class="logo-btn" onclick="navigeer('lijst')">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+          Kooklessen
+        </button>
+        <div id="header-acties"></div>
+      </div>
+    </header>
+    <main id="main"></main>
+  </div>
+
+  <div id="snippet-overlay" class="overlay verborgen" onclick="sluitSnippetModal()"></div>
+  <div id="snippet-modal" class="modal verborgen">
+    <div class="modal-header">
+      <h2>Voeg een techniek in</h2>
+      <button class="sluit-btn" onclick="sluitSnippetModal()">&#x2715;</button>
+    </div>
+    <div id="snippet-tabs" class="modal-tabs"></div>
+    <div id="snippet-grid" class="modal-body"></div>
+  </div>
+
+  <div id="verwijder-overlay" class="overlay verborgen" onclick="sluitVerwijderModal()"></div>
+  <div id="verwijder-modal" class="modal verborgen">
+    <div style="padding:28px">
+      <h3 style="margin-bottom:8px">Recept verwijderen?</h3>
+      <p style="color:var(--tekst-licht);font-size:.9rem;margin-bottom:20px">Dit kan niet ongedaan worden gemaakt.</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="sluitVerwijderModal()">Annuleren</button>
+        <button class="btn btn-gevaar" id="bevestig-verwijder-knop">Verwijderen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="snippets.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
