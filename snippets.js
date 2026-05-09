@@ -1,33 +1,41 @@
+const SNIPPET_CATEGORIE_VOLGORDE = [
+  'Snijtechnieken', 'Koken', 'Bakken', 'Bereiden', 'Hygiëne', 'Etenswaren'
+];
+
+const ETENSWAREN_VOLGORDE = [
+  'Groente & fruit', 'Vleeswaren', 'Zuivel', 'Pasta', 'Kruiden', 'Brood', 'Sauzen', 'Bakken', 'Overige'
+];
+
 const SNIPPETS = [
   {
-    id: 'ui-snipperen', categorie: 'Snijden',
-    naam: 'Ui snipperen',
-    beschrijving: 'Schil de ui en snijd hem doormidden. Leg de platte kant op het snijplank. Snijd dunne reepjes in de lengterichting zonder helemaal door te snijden. Draai 90° en snijd dwars erdoorheen in kleine gelijke stukjes.',
-    afbeelding: 'snippets/ui-snipperen.jpg'
-  },
-  {
-    id: 'knoflook-hakken', categorie: 'Snijden',
-    naam: 'Knoflook hakken',
-    beschrijving: 'Verwijder de papierachtige schil. Druk het teentje plat met de zijkant van je mes. Snijd in dunne plakjes, verzamel ze en hak ze fijn met een wiegbeweging.',
-    afbeelding: 'snippets/knoflook-hakken.jpg'
-  },
-  {
-    id: 'julienne', categorie: 'Snijden',
+    id: 'julienne', categorie: 'Snijtechnieken',
     naam: 'Julienne snijden',
     beschrijving: 'Snijd de groente in plakken van 3mm dik. Stapel de plakken en snijd ze in lange dunne reepjes van 3mm breed — zoals lucifers.',
     afbeelding: 'snippets/julienne.jpg'
   },
   {
-    id: 'brunoise', categorie: 'Snijden',
+    id: 'brunoise', categorie: 'Snijtechnieken',
     naam: 'Brunoise snijden',
     beschrijving: 'Maak eerst julienne-reepjes. Verzamel de reepjes en snijd dwars erdoorheen in gelijke kleine blokjes van ongeveer 3×3×3mm.',
     afbeelding: 'snippets/brunoise.jpg'
   },
   {
-    id: 'mes-vasthouden', categorie: 'Snijden',
+    id: 'mes-vasthouden', categorie: 'Snijtechnieken',
     naam: 'Mes vasthouden',
     beschrijving: 'Gebruik de klauwgreep: krul je vingers naar binnen zodat de knokkels het mes geleiden. De vingertips zijn altijd ingetrokken. Nooit snijden met gestrekte vingers.',
     afbeelding: 'snippets/mes-vasthouden.jpg'
+  },
+  {
+    id: 'ui-snipperen', categorie: 'Etenswaren', subcategorie: 'Groente & fruit',
+    naam: 'Ui snipperen',
+    beschrijving: 'Schil de ui en snijd hem doormidden. Leg de platte kant op het snijplank. Snijd dunne reepjes in de lengterichting zonder helemaal door te snijden. Draai 90° en snijd dwars erdoorheen in kleine gelijke stukjes.',
+    afbeelding: 'snippets/ui-snipperen.jpg'
+  },
+  {
+    id: 'knoflook-hakken', categorie: 'Etenswaren', subcategorie: 'Groente & fruit',
+    naam: 'Knoflook hakken',
+    beschrijving: 'Verwijder de papierachtige schil. Druk het teentje plat met de zijkant van je mes. Snijd in dunne plakjes, verzamel ze en hak ze fijn met een wiegbeweging.',
+    afbeelding: 'snippets/knoflook-hakken.jpg'
   },
   {
     id: 'water-koken', categorie: 'Koken',

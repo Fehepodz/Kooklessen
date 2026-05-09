@@ -9,6 +9,8 @@ let snippetStapIdx = null;
 let verwijderId = null;
 let zoekterm = '';
 let snippetTab = null;
+let snippetSubTab = null;
+let snippetZoek = '';
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -300,7 +302,7 @@ function htmlViewer() {
 // ── Snippet modal ──
 function openSnippetModal(stapIndex) {
   snippetStapIdx = stapIndex;
-  snippetTab = snippetTab || SNIPPETS[0].categorie;
+  snippetTab = snippetTab || 'Snijtechnieken';
   renderSnippetModal();
   document.getElementById('snippet-overlay').classList.remove('verborgen');
   document.getElementById('snippet-modal').classList.remove('verborgen');
@@ -308,17 +310,52 @@ function openSnippetModal(stapIndex) {
 
 function sluitSnippetModal() {
   snippetStapIdx = null;
+  snippetZoek = '';
+  snippetSubTab = null;
   document.getElementById('snippet-overlay').classList.add('verborgen');
   document.getElementById('snippet-modal').classList.add('verborgen');
 }
 
 function renderSnippetModal() {
-  const cats = [...new Set(SNIPPETS.map(s => s.categorie))];
+  const aanwezigeCats = new Set(SNIPPETS.map(s => s.categorie));
+  const geordend = SNIPPET_CATEGORIE_VOLGORDE.filter(c => aanwezigeCats.has(c));
+  const overige = [...aanwezigeCats].filter(c => !SNIPPET_CATEGORIE_VOLGORDE.includes(c));
+  const cats = ['Alle', ...geordend, ...overige];
+
   document.getElementById('snippet-tabs').innerHTML =
     cats.map(c => `<button class="tab-btn ${c===snippetTab?'actief':''}" onclick="wisselTab('${esc(c)}')">${esc(c)}</button>`).join('');
 
-  const lijst = SNIPPETS.filter(s => s.categorie === snippetTab);
-  document.getElementById('snippet-grid').innerHTML = `
+  let subTabHTML = '';
+  let lijst;
+  let zoekbarHTML = '';
+
+  if (snippetTab === 'Alle') {
+    zoekbarHTML = `<div class="snippet-zoekbalk-wrapper">
+      <input type="search" class="snippet-zoekbalk" placeholder="Zoeken op naam of beschrijving..."
+        value="${esc(snippetZoek)}" oninput="snippetZoek=this.value; renderSnippetModal()" autofocus>
+    </div>`;
+    lijst = snippetZoek.trim()
+      ? SNIPPETS.filter(s =>
+          s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
+          s.beschrijving.toLowerCase().includes(snippetZoek.toLowerCase()))
+      : SNIPPETS;
+  } else if (snippetTab === 'Etenswaren') {
+    const aanwezigeSubCats = new Set(
+      SNIPPETS.filter(s => s.categorie === 'Etenswaren').map(s => s.subcategorie).filter(Boolean)
+    );
+    const georderdeSubCats = ETENSWAREN_VOLGORDE.filter(c => aanwezigeSubCats.has(c));
+    const overigeSubCats = [...aanwezigeSubCats].filter(c => !ETENSWAREN_VOLGORDE.includes(c));
+    const subCats = [...georderdeSubCats, ...overigeSubCats];
+    if (!snippetSubTab || !subCats.includes(snippetSubTab)) snippetSubTab = subCats[0] || null;
+    subTabHTML = `<div class="modal-subtabs">
+      ${subCats.map(c => `<button class="subtab-btn ${c===snippetSubTab?'actief':''}" onclick="wisselSubTab('${esc(c)}')">${esc(c)}</button>`).join('')}
+    </div>`;
+    lijst = SNIPPETS.filter(s => s.categorie === 'Etenswaren' && s.subcategorie === snippetSubTab);
+  } else {
+    lijst = SNIPPETS.filter(s => s.categorie === snippetTab);
+  }
+
+  document.getElementById('snippet-grid').innerHTML = subTabHTML + zoekbarHTML + `
     <div class="snippet-kaarten">
       ${lijst.map(s => `
         <div class="snippet-kaart" onclick="kiesSnippet('${esc(s.id)}')">
@@ -334,6 +371,13 @@ function renderSnippetModal() {
 
 function wisselTab(cat) {
   snippetTab = cat;
+  snippetSubTab = null;
+  snippetZoek = '';
+  renderSnippetModal();
+}
+
+function wisselSubTab(cat) {
+  snippetSubTab = cat;
   renderSnippetModal();
 }
 
