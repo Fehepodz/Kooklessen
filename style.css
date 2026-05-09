@@ -371,6 +371,7 @@ input, textarea, select { font-family: inherit; color: var(--tekst); }
   color: var(--groen);
   margin-bottom: 4px;
 }
+.viewer-lesdoel { font-size: .95rem; background: #f0fdf4; border: 1px solid var(--groen-licht); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(--tekst); }
 .viewer-beschrijving { font-size: 1.05rem; color: var(--tekst-licht); line-height: 1.6; border-left: 4px solid var(--groen-licht); padding-left: 16px; }
 .viewer-body { display: grid; grid-template-columns: 230px 1fr; gap: 32px; align-items: start; }
 @media (max-width: 640px) { .viewer-body { grid-template-columns: 1fr; } }

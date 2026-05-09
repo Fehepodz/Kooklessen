@@ -50,7 +50,7 @@ function navigeer(view, id) {
     const bestaand = id ? recepten.find(r => r.id === id) : null;
     formulier = bestaand
       ? JSON.parse(JSON.stringify(bestaand))
-      : { id: genId(), titel: '', beschrijving: '', porties: 4,
+      : { id: genId(), titel: '', beschrijving: '', lesdoel: '', porties: 4,
           categorie: 'pasta', omslagfoto: null,
           ingredienten: [
             {id:genId(),tekst:''},{id:genId(),tekst:''},{id:genId(),tekst:''},
@@ -158,6 +158,11 @@ function htmlEditor() {
               </button>
               ${f.omslagfoto ? `<button class="btn btn-ghost btn-klein" onclick="verwijderOmslagfoto()">Verwijderen</button>` : ''}
             </div>
+          </div>
+          <div class="editor-sectie">
+            <div class="sectie-titel">Lesdoel</div>
+            <textarea class="editor-textarea" rows="2" placeholder="Wat leren de leerlingen van dit recept?"
+              oninput="formulier.lesdoel=this.value">${esc(f.lesdoel)}</textarea>
           </div>
           <div class="editor-sectie">
             <div class="sectie-titel">Beschrijving</div>
@@ -278,6 +283,7 @@ function htmlViewer() {
           ${r.porties ? `<span>&#128101; ${r.porties} porties</span>` : ''}
           ${r.categorie ? `<span>${esc(r.categorie)}</span>` : ''}
         </div>
+        ${r.lesdoel ? `<div class="viewer-lesdoel"><strong>Lesdoel:</strong> ${esc(r.lesdoel)}</div>` : ''}
         ${r.beschrijving ? `<p class="viewer-beschrijving">${esc(r.beschrijving)}</p>` : ''}
       </div>
       <div class="viewer-body">
