@@ -41,17 +41,6 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-function formatTijd(min) {
-  if (!min) return '';
-  if (min < 60) return min + ' min';
-  const u = Math.floor(min / 60), m = min % 60;
-  return m ? `${u} u ${m} min` : `${u} uur`;
-}
-
-function categoriEmoji(c) {
-  return { voorgerecht:'🥗', hoofdgerecht:'🍽️', nagerecht:'🍰', bijgerecht:'🥦', soep:'🍵', snack:'🥪', ontbijt:'🍳' }[c] || '🍳';
-}
-
 // ── Navigation ──
 function navigeer(view, id) {
   id = id || null;
@@ -61,9 +50,12 @@ function navigeer(view, id) {
     const bestaand = id ? recepten.find(r => r.id === id) : null;
     formulier = bestaand
       ? JSON.parse(JSON.stringify(bestaand))
-      : { id: genId(), titel: '', beschrijving: '', porties: 4, tijd: 30,
-          moeilijkheid: 'gemiddeld', categorie: 'hoofdgerecht',
-          ingredienten: [], stappen: [], aangemaakt: Date.now(), bijgewerkt: Date.now() };
+      : { id: genId(), titel: '', beschrijving: '', porties: 4,
+          categorie: 'pasta', omslagfoto: null,
+          ingredienten: [
+            {id:genId(),tekst:''},{id:genId(),tekst:''},{id:genId(),tekst:''},
+            {id:genId(),tekst:''},{id:genId(),tekst:''}
+          ], stappen: [], aangemaakt: Date.now(), bijgewerkt: Date.now() };
   }
   render();
   window.scrollTo(0, 0);
@@ -118,14 +110,12 @@ function htmlLijst() {
 }
 
 function htmlKaart(r) {
-  const eersteStapMetFoto = r.stappen.find(s => s.afbeelding || s.snippetId);
-  let fotoHTML;
-  if (eersteStapMetFoto) {
-    const src = eersteStapMetFoto.afbeelding || ('snippets/' + eersteStapMetFoto.snippetId + '.jpg');
-    fotoHTML = `<div class="kaart-foto"><img src="${esc(src)}" alt="" onerror="this.parentElement.textContent='${categoriEmoji(r.categorie)}'"></div>`;
-  } else {
-    fotoHTML = `<div class="kaart-foto">${categoriEmoji(r.categorie)}</div>`;
-  }
+  const stap = r.stappen.find(s => s.afbeelding || s.snippetId);
+  const src = r.omslagfoto
+    || (stap ? (stap.afbeelding || 'snippets/' + stap.snippetId + '.jpg') : null);
+  const fotoHTML = src
+    ? `<div class="kaart-foto"><img src="${esc(src)}" alt="" onerror="this.style.display='none'"></div>`
+    : `<div class="kaart-foto"></div>`;
   return `
     <div class="recept-kaart" onclick="navigeer('viewer','${esc(r.id)}')">
       ${fotoHTML}
@@ -133,9 +123,7 @@ function htmlKaart(r) {
         <div class="kaart-titel">${esc(r.titel || 'Naamloos recept')}</div>
         ${r.beschrijving ? `<div class="kaart-beschrijving">${esc(r.beschrijving)}</div>` : ''}
         <div class="kaart-meta">
-          ${r.tijd ? `<span>&#9201; ${formatTijd(r.tijd)}</span>` : ''}
           ${r.porties ? `<span>&#128101; ${r.porties} port.</span>` : ''}
-          <span class="badge badge-${esc(r.moeilijkheid)}">${esc(r.moeilijkheid)}</span>
         </div>
         <div class="kaart-acties" onclick="event.stopPropagation()">
           <button class="btn-icon" title="Bewerken" onclick="navigeer('editor','${esc(r.id)}')">&#9998;</button>
@@ -148,8 +136,7 @@ function htmlKaart(r) {
 // ── Editor ──
 function htmlEditor() {
   const f = formulier;
-  const categorieOpties = ['voorgerecht','hoofdgerecht','nagerecht','bijgerecht','soep','snack','ontbijt'];
-  const moeilijkheidOpties = ['makkelijk','gemiddeld','moeilijk'];
+  const categorieOpties = ['pasta','lunch','winter & zomerkost','exotisch eten','snacks','bakken'];
   return `
     <div class="editor-wrapper">
       <div class="editor-titel-sectie">
@@ -158,6 +145,20 @@ function htmlEditor() {
       </div>
       <div class="editor-kolommen">
         <div class="editor-links">
+          <div class="editor-sectie">
+            <div class="sectie-titel">Omslagfoto</div>
+            ${f.omslagfoto
+              ? `<img class="omslag-preview" src="${esc(f.omslagfoto)}" alt="Omslagfoto">`
+              : `<div class="omslag-leeg">Nog geen omslagfoto</div>`}
+            <input type="file" accept="image/*" id="omslag-upload" style="display:none"
+              onchange="verwerkOmslagfoto(this)">
+            <div class="omslag-acties">
+              <button class="btn btn-ghost btn-klein" onclick="document.getElementById('omslag-upload').click()">
+                &#128247; ${f.omslagfoto ? 'Andere foto' : 'Foto uploaden'}
+              </button>
+              ${f.omslagfoto ? `<button class="btn btn-ghost btn-klein" onclick="verwijderOmslagfoto()">Verwijderen</button>` : ''}
+            </div>
+          </div>
           <div class="editor-sectie">
             <div class="sectie-titel">Beschrijving</div>
             <textarea class="editor-textarea" rows="3" placeholder="Korte omschrijving..."
@@ -169,13 +170,6 @@ function htmlEditor() {
               <label class="detail-label"><span>Porties</span>
                 <input type="number" class="detail-input" min="1" max="100" value="${esc(f.porties)}"
                   oninput="formulier.porties=parseInt(this.value)||1"></label>
-              <label class="detail-label"><span>Bereidingstijd (min)</span>
-                <input type="number" class="detail-input" min="1" max="999" value="${esc(f.tijd)}"
-                  oninput="formulier.tijd=parseInt(this.value)||0"></label>
-              <label class="detail-label"><span>Moeilijkheid</span>
-                <select class="detail-input" onchange="formulier.moeilijkheid=this.value">
-                  ${moeilijkheidOpties.map(m => `<option value="${m}" ${f.moeilijkheid===m?'selected':''}>${m.charAt(0).toUpperCase()+m.slice(1)}</option>`).join('')}
-                </select></label>
               <label class="detail-label"><span>Categorie</span>
                 <select class="detail-input" onchange="formulier.categorie=this.value">
                   ${categorieOpties.map(c => `<option value="${c}" ${f.categorie===c?'selected':''}>${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
@@ -204,11 +198,14 @@ function htmlEditor() {
 }
 
 function htmlIngredient(ing, i) {
+  const isLaatste = i === formulier.ingredienten.length - 1;
   return `
     <div class="ingredient-rij">
       <input type="text" class="ingredient-input" placeholder="bijv. 2 uien of 100g bloem"
         value="${esc(ing.tekst)}" oninput="formulier.ingredienten[${i}].tekst=this.value">
-      <button class="btn-verwijder" onclick="verwijderIngredient(${i})" title="Verwijder">&#215;</button>
+      <button class="btn-verwijder" onclick="verwijderIngredient(${i})" title="Verwijder"
+        ${isLaatste ? `onkeydown="if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();voegIngredientToe();}"` : ''}
+      >&#215;</button>
     </div>`;
 }
 
@@ -243,7 +240,9 @@ function htmlStapEditor(stap, i) {
       <div class="stap-besturing">
         ${i > 0 ? `<button class="btn-icon" onclick="verplaatsStap(${i},-1)" title="Omhoog">&#8593;</button>` : '<span style="width:32px"></span>'}
         ${i < n-1 ? `<button class="btn-icon" onclick="verplaatsStap(${i},1)" title="Omlaag">&#8595;</button>` : '<span style="width:32px"></span>'}
-        <button class="btn-icon btn-icon-gevaar" onclick="verwijderStap(${i})" title="Verwijder stap">&#215;</button>
+        <button class="btn-icon btn-icon-gevaar" onclick="verwijderStap(${i})" title="Verwijder stap"
+          ${i === n-1 ? `onkeydown="if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();voegStapToe();}"` : ''}
+        >&#215;</button>
       </div>
     </div>`;
 }
@@ -276,9 +275,7 @@ function htmlViewer() {
       <div class="viewer-header">
         <h1 class="viewer-titel">${esc(r.titel || 'Naamloos recept')}</h1>
         <div class="viewer-meta">
-          ${r.tijd ? `<span>&#9201; ${formatTijd(r.tijd)}</span>` : ''}
           ${r.porties ? `<span>&#128101; ${r.porties} porties</span>` : ''}
-          <span class="badge badge-${esc(r.moeilijkheid)}">${esc(r.moeilijkheid)}</span>
           ${r.categorie ? `<span>${esc(r.categorie)}</span>` : ''}
         </div>
         ${r.beschrijving ? `<p class="viewer-beschrijving">${esc(r.beschrijving)}</p>` : ''}
@@ -321,7 +318,7 @@ function renderSnippetModal() {
         <div class="snippet-kaart" onclick="kiesSnippet('${esc(s.id)}')">
           <div class="snippet-foto">
             <img src="${esc(s.afbeelding)}" alt="${esc(s.naam)}"
-              onerror="this.parentElement.textContent='${s.emoji}'">
+              onerror="this.style.display='none'">
           </div>
           <div class="snippet-naam">${esc(s.naam)}</div>
           <div class="snippet-preview">${esc(s.beschrijving.slice(0, 65))}...</div>
@@ -378,6 +375,19 @@ function verplaatsStap(i, richting) {
   const j = i + richting;
   if (j < 0 || j >= formulier.stappen.length) return;
   [formulier.stappen[i], formulier.stappen[j]] = [formulier.stappen[j], formulier.stappen[i]];
+  renderMain();
+}
+
+function verwerkOmslagfoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { formulier.omslagfoto = e.target.result; renderMain(); };
+  reader.readAsDataURL(file);
+}
+
+function verwijderOmslagfoto() {
+  formulier.omslagfoto = null;
   renderMain();
 }
 
