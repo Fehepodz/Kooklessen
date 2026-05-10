@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\kevin\\\\Desktop\\\\Projecten\\\\recepten-kooklessen\\\\snippets\")",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\kevin\\\\Desktop\\\\Projecten\\\\recepten-kooklessen\\\\snippets\" | ForEach-Object { $_.Name })"
+    ]
+  }
+}

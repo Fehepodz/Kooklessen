@@ -113,8 +113,9 @@ function htmlLijst() {
 
 function htmlKaart(r) {
   const stap = r.stappen.find(s => s.afbeelding || s.snippetId);
+  const snippetItem = stap && stap.snippetId ? SNIPPETS.find(x => x.id === stap.snippetId) : null;
   const src = r.omslagfoto
-    || (stap ? (stap.afbeelding || 'snippets/' + stap.snippetId + '.jpg') : null);
+    || (stap ? (stap.afbeelding || (snippetItem ? snippetItem.afbeelding : null)) : null);
   const fotoHTML = src
     ? `<div class="kaart-foto"><img src="${esc(src)}" alt="" onerror="this.style.display='none'"></div>`
     : `<div class="kaart-foto"></div>`;
@@ -218,7 +219,12 @@ function htmlIngredient(ing, i) {
 
 function htmlStapEditor(stap, i) {
   const n = formulier.stappen.length;
-  const src = stap.afbeelding || (stap.snippetId ? `snippets/${stap.snippetId}.jpg` : null);
+  const snippetRef = stap.snippetId ? SNIPPETS.find(x => x.id === stap.snippetId) : null;
+  const src = stap.afbeelding || (snippetRef ? snippetRef.afbeelding : null);
+  if (!stap.tekst && snippetRef && snippetRef.beschrijving) {
+    formulier.stappen[i].tekst = snippetRef.beschrijving;
+    stap = formulier.stappen[i];
+  }
   return `
     <div class="stap-kaart">
       <div class="stap-nr">${i + 1}</div>
@@ -266,13 +272,15 @@ function htmlViewer() {
   const stapHTML = r.stappen.length === 0
     ? '<p class="leeg">Geen stappen opgegeven.</p>'
     : r.stappen.map((s, i) => {
-        const src = s.afbeelding || (s.snippetId ? `snippets/${s.snippetId}.jpg` : null);
+        const snippetLookup = s.snippetId ? SNIPPETS.find(x => x.id === s.snippetId) : null;
+        const src = s.afbeelding || (snippetLookup ? snippetLookup.afbeelding : null);
+        const tekst = s.tekst || (snippetLookup ? snippetLookup.beschrijving : '');
         return `
           <div class="viewer-stap">
             <div class="viewer-stap-nr">${i + 1}</div>
             <div class="viewer-stap-inhoud">
               ${src ? `<img src="${esc(src)}" alt="" onerror="this.style.display='none'">` : ''}
-              <p>${esc(s.tekst).replace(/\n/g, '<br>')}</p>
+              <p>${esc(tekst).replace(/\n/g, '<br>')}</p>
             </div>
           </div>`;
       }).join('');
@@ -327,13 +335,14 @@ function renderSnippetModal() {
 
   let subTabHTML = '';
   let lijst;
-  let zoekbarHTML = '';
+
+  const zoekPlaceholder = snippetTab === 'Alle' ? 'Zoeken in alle snippets...' : `Zoeken in ${snippetTab}...`;
+  const zoekbarHTML = `<div class="snippet-zoekbalk-wrapper">
+    <input type="search" class="snippet-zoekbalk" placeholder="${esc(zoekPlaceholder)}"
+      value="${esc(snippetZoek)}" oninput="snippetZoek=this.value; renderSnippetModal()" autofocus>
+  </div>`;
 
   if (snippetTab === 'Alle') {
-    zoekbarHTML = `<div class="snippet-zoekbalk-wrapper">
-      <input type="search" class="snippet-zoekbalk" placeholder="Zoeken op naam of beschrijving..."
-        value="${esc(snippetZoek)}" oninput="snippetZoek=this.value; renderSnippetModal()" autofocus>
-    </div>`;
     lijst = snippetZoek.trim()
       ? SNIPPETS.filter(s =>
           s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
@@ -350,12 +359,23 @@ function renderSnippetModal() {
     subTabHTML = `<div class="modal-subtabs">
       ${subCats.map(c => `<button class="subtab-btn ${c===snippetSubTab?'actief':''}" onclick="wisselSubTab('${esc(c)}')">${esc(c)}</button>`).join('')}
     </div>`;
-    lijst = SNIPPETS.filter(s => s.categorie === 'Etenswaren' && s.subcategorie === snippetSubTab);
+    if (snippetZoek.trim()) {
+      lijst = SNIPPETS.filter(s => s.categorie === 'Etenswaren' &&
+        (s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
+         s.beschrijving.toLowerCase().includes(snippetZoek.toLowerCase())));
+    } else {
+      lijst = SNIPPETS.filter(s => s.categorie === 'Etenswaren' && s.subcategorie === snippetSubTab);
+    }
   } else {
     lijst = SNIPPETS.filter(s => s.categorie === snippetTab);
+    if (snippetZoek.trim()) {
+      lijst = lijst.filter(s =>
+        s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
+        s.beschrijving.toLowerCase().includes(snippetZoek.toLowerCase()));
+    }
   }
 
-  document.getElementById('snippet-grid').innerHTML = subTabHTML + zoekbarHTML + `
+  document.getElementById('snippet-grid').innerHTML = zoekbarHTML + subTabHTML + `
     <div class="snippet-kaarten">
       ${lijst.map(s => `
         <div class="snippet-kaart" onclick="kiesSnippet('${esc(s.id)}')">
