@@ -667,7 +667,7 @@ const SNIPPETS = [
     id: 'citroen-schijfjes', categorie: 'Etenswaren', subcategorie: 'Groente & fruit',
     naam: 'Citroen in schijfjes',
     beschrijving: 'Leg de citroen op zijn kant en snijd hem in ronde schijfjes van 5 mm dik. Verwijder eventueel de zaadjes.',
-    afbeelding: 'snippets/citroen schijfjes.png'
+    afbeelding: 'snippets/citroen-schijfjes.png'
   },
   {
     id: 'citroen-partjes', categorie: 'Etenswaren', subcategorie: 'Groente & fruit',
@@ -764,13 +764,13 @@ const SNIPPETS = [
     afbeelding: 'snippets/ei-schillendoormiddensnijden.png'
   },
   {
-    id: 'gehakt-cajun-wok', categorie: 'Bereiden',
+    id: 'gehakt-cajun-wok', categorie: 'Bakken',
     naam: 'Gehakt bakken met cajunkruiden in wok',
     beschrijving: 'Verhit de wok op hoog vuur. Voeg het gehakt toe en bak het rul. Voeg de cajunkruiden toe en bak nog 1–2 minuten mee.',
     afbeelding: 'snippets/gehakt-bakkenmetcajunkruideninwok.png'
   },
   {
-    id: 'kip-inpandoen', categorie: 'Bereiden',
+    id: 'kip-inpandoen', categorie: 'Bakken',
     naam: 'Kip in pan doen',
     beschrijving: 'Verhit olie in de pan op middelhoog vuur. Leg de stukken kip voorzichtig in de hete pan. Zorg dat ze gelijkmatig verdeeld liggen.',
     afbeelding: 'snippets/Kip-inpandoen.png'
@@ -782,7 +782,7 @@ const SNIPPETS = [
     afbeelding: 'snippets/kip-snijden+marineren.png'
   },
   {
-    id: 'kip-bouillon-afblussen', categorie: 'Bereiden',
+    id: 'kip-bouillon-afblussen', categorie: 'Bakken',
     naam: 'Kip met bouillon afblussen',
     beschrijving: 'Voeg de bouillon toe aan de pan met kip. Roer de aanbaksels los en laat het geheel even sudderen.',
     afbeelding: 'snippets/kip-bouillon-afblussen.png'
@@ -812,13 +812,13 @@ const SNIPPETS = [
     afbeelding: 'snippets/toevoegen-gesnedenkousenband-sperzieboontjes-aardappelblokjes-tomaatblokjes.png'
   },
   {
-    id: 'ui-knoflook-rodepeper-pan', categorie: 'Bereiden',
+    id: 'ui-knoflook-rodepeper-pan', categorie: 'Bakken',
     naam: 'Ui, knoflook en rode peper toevoegen',
     beschrijving: 'Voeg de gesneden ui, knoflook en rode peper toe aan de hete pan. Bak op middelhoog vuur tot de ui glazig en zacht is.',
     afbeelding: 'snippets/ui-knoflook-rodepeper-toevoegenaandepan.png'
   },
   {
-    id: 'ui-toevoegen-gehakt', categorie: 'Bereiden',
+    id: 'ui-toevoegen-gehakt', categorie: 'Bakken',
     naam: 'Ui toevoegen aan gehakt',
     beschrijving: 'Voeg de gesneden ui toe aan het aanbakkende gehakt. Roer goed door en bak mee tot de ui zacht en lichtbruin is.',
     afbeelding: 'snippets/ui-toevoegenaangehakt.png'

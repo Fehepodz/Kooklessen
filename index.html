@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kooklessen — Recepten</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,12 +15,7 @@
     <header id="header">
       <div class="header-inner">
         <button class="logo-btn" onclick="navigeer('lijst')">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-          </svg>
+          <i class="fas fa-utensils"></i>
           Kooklessen
         </button>
         <div id="header-acties"></div>
@@ -29,7 +28,7 @@
   <div id="snippet-modal" class="modal verborgen">
     <div class="modal-header">
       <h2>Voeg een techniek in</h2>
-      <button class="sluit-btn" onclick="sluitSnippetModal()">&#x2715;</button>
+      <button class="sluit-btn" onclick="sluitSnippetModal()"><i class="fas fa-xmark"></i></button>
     </div>
     <div id="snippet-tabs" class="modal-tabs"></div>
     <div id="snippet-grid" class="modal-body"></div>

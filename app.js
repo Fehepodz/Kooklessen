@@ -11,10 +11,15 @@ let zoekterm = '';
 let snippetTab = null;
 let snippetSubTab = null;
 let snippetZoek = '';
+let aangepaste_snippets = [];
+let snippetMakenModus = false;
+let snippetFormulier = null;
+let snippetZoekCursor = 0;
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
   laadRecepten();
+  laadAangepastSnippets();
   render();
 });
 
@@ -29,6 +34,16 @@ function slaanOp() {
   catch { alert('Opslaan mislukt: de opslagruimte is vol. Verwijder grote foto\'s of oude recepten.'); }
 }
 
+function laadAangepastSnippets() {
+  try { aangepaste_snippets = JSON.parse(localStorage.getItem('kooklessen-snippets') || '[]'); }
+  catch { aangepaste_snippets = []; }
+}
+
+function slaAangepastSnippetsOp() {
+  try { localStorage.setItem('kooklessen-snippets', JSON.stringify(aangepaste_snippets)); }
+  catch { alert('Opslaan mislukt: de opslagruimte is vol.'); }
+}
+
 // ── Helpers ──
 function esc(s) {
   if (s == null) return '';
@@ -41,6 +56,10 @@ function esc(s) {
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function vindSnippet(id) {
+  return SNIPPETS.find(x => x.id === id) || aangepaste_snippets.find(x => x.id === id) || null;
 }
 
 // ── Navigation ──
@@ -69,16 +88,16 @@ function render() { renderHeader(); renderMain(); }
 function renderHeader() {
   const el = document.getElementById('header-acties');
   if (huidigeView === 'lijst') {
-    el.innerHTML = `<button class="btn btn-wit" onclick="navigeer('editor')">+ Nieuw recept</button>`;
+    el.innerHTML = `<button class="btn btn-wit" onclick="navigeer('editor')"><i class="fas fa-plus"></i> Nieuw recept</button>`;
   } else if (huidigeView === 'editor') {
     el.innerHTML = `
-      <button class="btn btn-ghost-wit" onclick="navigeer('lijst')">&#8592; Terug</button>
-      <button class="btn btn-wit" onclick="slaReceptOp()">&#128190; Opslaan</button>`;
+      <button class="btn btn-ghost-wit" onclick="navigeer('lijst')"><i class="fas fa-arrow-left"></i> Terug</button>
+      <button class="btn btn-wit" onclick="slaReceptOp()"><i class="fas fa-floppy-disk"></i> Opslaan</button>`;
   } else {
     el.innerHTML = `
-      <button class="btn btn-ghost-wit" onclick="navigeer('lijst')">&#8592; Terug</button>
-      <button class="btn btn-ghost-wit" onclick="navigeer('editor', viewId)">&#9998; Bewerken</button>
-      <button class="btn btn-wit" onclick="window.print()">&#128438; Afdrukken</button>`;
+      <button class="btn btn-ghost-wit" onclick="navigeer('lijst')"><i class="fas fa-arrow-left"></i> Terug</button>
+      <button class="btn btn-ghost-wit" onclick="navigeer('editor', viewId)"><i class="fas fa-pen"></i> Bewerken</button>
+      <button class="btn btn-wit" onclick="window.print()"><i class="fas fa-print"></i> Afdrukken</button>`;
   }
 }
 
@@ -113,12 +132,12 @@ function htmlLijst() {
 
 function htmlKaart(r) {
   const stap = r.stappen.find(s => s.afbeelding || s.snippetId);
-  const snippetItem = stap && stap.snippetId ? SNIPPETS.find(x => x.id === stap.snippetId) : null;
+  const snippetItem = stap && stap.snippetId ? vindSnippet(stap.snippetId) : null;
   const src = r.omslagfoto
     || (stap ? (stap.afbeelding || (snippetItem ? snippetItem.afbeelding : null)) : null);
   const fotoHTML = src
     ? `<div class="kaart-foto"><img src="${esc(src)}" alt="" onerror="this.style.display='none'"></div>`
-    : `<div class="kaart-foto"></div>`;
+    : `<div class="kaart-foto"><i class="fas fa-utensils" style="font-size:2.5rem;opacity:.5"></i></div>`;
   return `
     <div class="recept-kaart" onclick="navigeer('viewer','${esc(r.id)}')">
       ${fotoHTML}
@@ -126,11 +145,11 @@ function htmlKaart(r) {
         <div class="kaart-titel">${esc(r.titel || 'Naamloos recept')}</div>
         ${r.beschrijving ? `<div class="kaart-beschrijving">${esc(r.beschrijving)}</div>` : ''}
         <div class="kaart-meta">
-          ${r.porties ? `<span>&#128101; ${r.porties} port.</span>` : ''}
+          ${r.porties ? `<span><i class="fas fa-users"></i> ${r.porties} port.</span>` : ''}
         </div>
         <div class="kaart-acties" onclick="event.stopPropagation()">
-          <button class="btn-icon" title="Bewerken" onclick="navigeer('editor','${esc(r.id)}')">&#9998;</button>
-          <button class="btn-icon btn-icon-gevaar" title="Verwijderen" onclick="openVerwijderModal('${esc(r.id)}')">&#128465;</button>
+          <button class="btn-icon" title="Bewerken" onclick="navigeer('editor','${esc(r.id)}')"><i class="fas fa-pen"></i></button>
+          <button class="btn-icon btn-icon-gevaar" title="Verwijderen" onclick="openVerwijderModal('${esc(r.id)}')"><i class="fas fa-trash"></i></button>
         </div>
       </div>
     </div>`;
@@ -157,9 +176,9 @@ function htmlEditor() {
               onchange="verwerkOmslagfoto(this)">
             <div class="omslag-acties">
               <button class="btn btn-ghost btn-klein" onclick="document.getElementById('omslag-upload').click()">
-                &#128247; ${f.omslagfoto ? 'Andere foto' : 'Foto uploaden'}
+                <i class="fas fa-camera"></i> ${f.omslagfoto ? 'Andere foto' : 'Foto uploaden'}
               </button>
-              ${f.omslagfoto ? `<button class="btn btn-ghost btn-klein" onclick="verwijderOmslagfoto()">Verwijderen</button>` : ''}
+              ${f.omslagfoto ? `<button class="btn btn-ghost btn-klein" onclick="verwijderOmslagfoto()"><i class="fas fa-trash"></i> Verwijderen</button>` : ''}
             </div>
           </div>
           <div class="editor-sectie">
@@ -189,7 +208,7 @@ function htmlEditor() {
             <div id="ingredienten-lijst">
               ${f.ingredienten.map((ing, i) => htmlIngredient(ing, i)).join('')}
             </div>
-            <button class="btn btn-omlijnd btn-klein" style="margin-top:4px" onclick="voegIngredientToe()">+ Ingrediënt</button>
+            <button class="btn btn-omlijnd btn-klein" style="margin-top:4px" onclick="voegIngredientToe()"><i class="fas fa-plus"></i> Ingrediënt</button>
           </div>
         </div>
         <div class="editor-rechts">
@@ -198,7 +217,7 @@ function htmlEditor() {
             <div id="stappen-lijst">
               ${f.stappen.map((stap, i) => htmlStapEditor(stap, i)).join('')}
             </div>
-            <button class="btn btn-omlijnd" onclick="voegStapToe()">+ Stap toevoegen</button>
+            <button class="btn btn-omlijnd" onclick="voegStapToe()"><i class="fas fa-plus"></i> Stap toevoegen</button>
           </div>
         </div>
       </div>
@@ -213,18 +232,14 @@ function htmlIngredient(ing, i) {
         value="${esc(ing.tekst)}" oninput="formulier.ingredienten[${i}].tekst=this.value">
       <button class="btn-verwijder" onclick="verwijderIngredient(${i})" title="Verwijder"
         ${isLaatste ? `onkeydown="if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();voegIngredientToe();}"` : ''}
-      >&#215;</button>
+      ><i class="fas fa-xmark"></i></button>
     </div>`;
 }
 
 function htmlStapEditor(stap, i) {
   const n = formulier.stappen.length;
-  const snippetRef = stap.snippetId ? SNIPPETS.find(x => x.id === stap.snippetId) : null;
+  const snippetRef = stap.snippetId ? vindSnippet(stap.snippetId) : null;
   const src = stap.afbeelding || (snippetRef ? snippetRef.afbeelding : null);
-  if (!stap.tekst && snippetRef && snippetRef.beschrijving) {
-    formulier.stappen[i].tekst = snippetRef.beschrijving;
-    stap = formulier.stappen[i];
-  }
   return `
     <div class="stap-kaart">
       <div class="stap-nr">${i + 1}</div>
@@ -235,27 +250,27 @@ function htmlStapEditor(stap, i) {
           ${src
             ? `<div class="stap-foto-preview">
                 <img src="${esc(src)}" alt="" onerror="this.style.display='none'">
-                <button class="verwijder-foto" onclick="verwijderStapFoto(${i})" title="Verwijder foto">&#215;</button>
+                <button class="verwijder-foto" onclick="verwijderStapFoto(${i})" title="Verwijder foto"><i class="fas fa-xmark"></i></button>
               </div>`
             : `<div class="stap-foto-leeg">Geen afbeelding</div>`}
           <div class="stap-foto-acties">
             <input type="file" accept="image/*" id="upload-${i}" style="display:none"
               onchange="verwerkUpload(${i},this)">
             <button class="btn btn-ghost btn-klein" onclick="document.getElementById('upload-${i}').click()">
-              &#128247; Upload foto
+              <i class="fas fa-camera"></i> Upload foto
             </button>
             <button class="btn btn-ghost btn-klein" onclick="openSnippetModal(${i})">
-              &#128203; Snippet kiezen
+              <i class="fas fa-book-open"></i> Snippet kiezen
             </button>
           </div>
         </div>
       </div>
       <div class="stap-besturing">
-        ${i > 0 ? `<button class="btn-icon" onclick="verplaatsStap(${i},-1)" title="Omhoog">&#8593;</button>` : '<span style="width:32px"></span>'}
-        ${i < n-1 ? `<button class="btn-icon" onclick="verplaatsStap(${i},1)" title="Omlaag">&#8595;</button>` : '<span style="width:32px"></span>'}
+        ${i > 0 ? `<button class="btn-icon" onclick="verplaatsStap(${i},-1)" title="Omhoog"><i class="fas fa-arrow-up"></i></button>` : '<span style="width:32px"></span>'}
+        ${i < n-1 ? `<button class="btn-icon" onclick="verplaatsStap(${i},1)" title="Omlaag"><i class="fas fa-arrow-down"></i></button>` : '<span style="width:32px"></span>'}
         <button class="btn-icon btn-icon-gevaar" onclick="verwijderStap(${i})" title="Verwijder stap"
           ${i === n-1 ? `onkeydown="if(event.key==='Tab'&&!event.shiftKey){event.preventDefault();voegStapToe();}"` : ''}
-        >&#215;</button>
+        ><i class="fas fa-xmark"></i></button>
       </div>
     </div>`;
 }
@@ -272,7 +287,7 @@ function htmlViewer() {
   const stapHTML = r.stappen.length === 0
     ? '<p class="leeg">Geen stappen opgegeven.</p>'
     : r.stappen.map((s, i) => {
-        const snippetLookup = s.snippetId ? SNIPPETS.find(x => x.id === s.snippetId) : null;
+        const snippetLookup = s.snippetId ? vindSnippet(s.snippetId) : null;
         const src = s.afbeelding || (snippetLookup ? snippetLookup.afbeelding : null);
         const tekst = s.tekst || (snippetLookup ? snippetLookup.beschrijving : '');
         return `
@@ -290,7 +305,7 @@ function htmlViewer() {
       <div class="viewer-header">
         <h1 class="viewer-titel">${esc(r.titel || 'Naamloos recept')}</h1>
         <div class="viewer-meta">
-          ${r.porties ? `<span>&#128101; ${r.porties} porties</span>` : ''}
+          ${r.porties ? `<span><i class="fas fa-users"></i> ${r.porties} porties</span>` : ''}
           ${r.categorie ? `<span>${esc(r.categorie)}</span>` : ''}
         </div>
         ${r.lesdoel ? `<div class="viewer-lesdoel"><strong>Lesdoel:</strong> ${esc(r.lesdoel)}</div>` : ''}
@@ -320,6 +335,8 @@ function sluitSnippetModal() {
   snippetStapIdx = null;
   snippetZoek = '';
   snippetSubTab = null;
+  snippetMakenModus = false;
+  snippetFormulier = null;
   document.getElementById('snippet-overlay').classList.add('verborgen');
   document.getElementById('snippet-modal').classList.add('verborgen');
 }
@@ -328,26 +345,64 @@ function renderSnippetModal() {
   const aanwezigeCats = new Set(SNIPPETS.map(s => s.categorie));
   const geordend = SNIPPET_CATEGORIE_VOLGORDE.filter(c => aanwezigeCats.has(c));
   const overige = [...aanwezigeCats].filter(c => !SNIPPET_CATEGORIE_VOLGORDE.includes(c));
-  const cats = ['Alle', ...geordend, ...overige];
+  const cats = ['Alle', ...geordend, ...overige, 'Eigen'];
 
   document.getElementById('snippet-tabs').innerHTML =
     cats.map(c => `<button class="tab-btn ${c===snippetTab?'actief':''}" onclick="wisselTab('${esc(c)}')">${esc(c)}</button>`).join('');
 
-  let subTabHTML = '';
-  let lijst;
-
   const zoekPlaceholder = snippetTab === 'Alle' ? 'Zoeken in alle snippets...' : `Zoeken in ${snippetTab}...`;
   const zoekbarHTML = `<div class="snippet-zoekbalk-wrapper">
     <input type="search" class="snippet-zoekbalk" placeholder="${esc(zoekPlaceholder)}"
-      value="${esc(snippetZoek)}" oninput="snippetZoek=this.value; renderSnippetModal()" autofocus>
+      value="${esc(snippetZoek)}" oninput="snippetZoekCursor=this.selectionStart; snippetZoek=this.value; renderSnippetModal()" autofocus>
   </div>`;
 
-  if (snippetTab === 'Alle') {
-    lijst = snippetZoek.trim()
-      ? SNIPPETS.filter(s =>
+  if (snippetTab === 'Eigen') {
+    if (snippetMakenModus) {
+      document.getElementById('snippet-grid').innerHTML = htmlSnippetFormulier();
+    } else {
+      let eigenLijst = aangepaste_snippets;
+      if (snippetZoek.trim()) {
+        eigenLijst = eigenLijst.filter(s =>
           s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
-          s.beschrijving.toLowerCase().includes(snippetZoek.toLowerCase()))
-      : SNIPPETS;
+          (s.beschrijving || '').toLowerCase().includes(snippetZoek.toLowerCase()));
+      }
+      document.getElementById('snippet-grid').innerHTML = zoekbarHTML + `
+        <div style="margin-bottom:14px">
+          <button class="btn btn-omlijnd btn-klein" onclick="openNieuwSnippetFormulier()">+ Nieuw snippet maken</button>
+        </div>
+        <div class="snippet-kaarten">
+          ${eigenLijst.length === 0
+            ? `<p style="color:var(--tekst-licht);font-style:italic;padding:12px 0;grid-column:1/-1">${snippetZoek.trim() ? 'Geen resultaten.' : 'Nog geen eigen snippets. Klik op <strong>+ Nieuw snippet maken</strong> om te beginnen.'}</p>`
+            : eigenLijst.map(s => `
+              <div class="snippet-kaart eigen-snippet-kaart" onclick="kiesSnippet('${esc(s.id)}')">
+                <div class="snippet-foto">
+                  ${s.afbeelding ? `<img src="${esc(s.afbeelding)}" alt="${esc(s.naam)}" onerror="this.style.display='none'">` : ''}
+                </div>
+                <div class="snippet-naam">${esc(s.naam)}</div>
+                <div class="snippet-preview">${esc((s.beschrijving || '').slice(0, 65))}...</div>
+                <button class="eigen-snippet-verwijder" onclick="event.stopPropagation();verwijderEigenSnippet('${esc(s.id)}')" title="Verwijderen">&#215;</button>
+              </div>`).join('')}
+        </div>`;
+
+      const zoekInput = document.querySelector('.snippet-zoekbalk');
+      if (zoekInput) {
+        zoekInput.focus();
+        zoekInput.setSelectionRange(snippetZoekCursor, snippetZoekCursor);
+      }
+    }
+    return;
+  }
+
+  let subTabHTML = '';
+  let lijst;
+
+  if (snippetTab === 'Alle') {
+    const alle = [...SNIPPETS, ...aangepaste_snippets];
+    lijst = snippetZoek.trim()
+      ? alle.filter(s =>
+          s.naam.toLowerCase().includes(snippetZoek.toLowerCase()) ||
+          (s.beschrijving || '').toLowerCase().includes(snippetZoek.toLowerCase()))
+      : alle;
   } else if (snippetTab === 'Etenswaren') {
     const aanwezigeSubCats = new Set(
       SNIPPETS.filter(s => s.categorie === 'Etenswaren').map(s => s.subcategorie).filter(Boolean)
@@ -380,19 +435,26 @@ function renderSnippetModal() {
       ${lijst.map(s => `
         <div class="snippet-kaart" onclick="kiesSnippet('${esc(s.id)}')">
           <div class="snippet-foto">
-            <img src="${esc(s.afbeelding)}" alt="${esc(s.naam)}"
-              onerror="this.style.display='none'">
+            ${s.afbeelding ? `<img src="${esc(s.afbeelding)}" alt="${esc(s.naam)}" onerror="this.style.display='none'">` : ''}
           </div>
           <div class="snippet-naam">${esc(s.naam)}</div>
           <div class="snippet-preview">${esc(s.beschrijving.slice(0, 65))}...</div>
         </div>`).join('')}
     </div>`;
+
+  const zoekInput = document.querySelector('.snippet-zoekbalk');
+  if (zoekInput) {
+    zoekInput.focus();
+    zoekInput.setSelectionRange(snippetZoekCursor, snippetZoekCursor);
+  }
 }
 
 function wisselTab(cat) {
   snippetTab = cat;
   snippetSubTab = null;
   snippetZoek = '';
+  snippetMakenModus = false;
+  snippetFormulier = null;
   renderSnippetModal();
 }
 
@@ -403,13 +465,94 @@ function wisselSubTab(cat) {
 
 function kiesSnippet(snippetId) {
   if (snippetStapIdx === null) return;
-  const s = SNIPPETS.find(x => x.id === snippetId);
+  const s = vindSnippet(snippetId);
   if (!s) return;
   formulier.stappen[snippetStapIdx].tekst = s.beschrijving;
   formulier.stappen[snippetStapIdx].snippetId = s.id;
   formulier.stappen[snippetStapIdx].afbeelding = null;
   sluitSnippetModal();
   renderMain();
+}
+
+// ── Eigen snippets ──
+function openNieuwSnippetFormulier() {
+  snippetFormulier = { naam: '', beschrijving: '', afbeelding: null };
+  snippetMakenModus = true;
+  renderSnippetModal();
+}
+
+function annuleerSnippetFormulier() {
+  snippetFormulier = null;
+  snippetMakenModus = false;
+  renderSnippetModal();
+}
+
+function htmlSnippetFormulier() {
+  const sf = snippetFormulier;
+  return `
+    <div class="snippet-formulier">
+      <h3 class="snippet-formulier-titel">Nieuw snippet maken</h3>
+      <div class="snippet-formulier-veld">
+        <label>Naam</label>
+        <input type="text" class="detail-input" placeholder="bijv. Tomaat snijden"
+          value="${esc(sf.naam)}" oninput="snippetFormulier.naam=this.value">
+      </div>
+      <div class="snippet-formulier-veld">
+        <label>Beschrijving</label>
+        <textarea class="editor-textarea" rows="4" placeholder="Beschrijf de techniek stap voor stap..."
+          oninput="snippetFormulier.beschrijving=this.value">${esc(sf.beschrijving)}</textarea>
+      </div>
+      <div class="snippet-formulier-veld">
+        <label>Afbeelding <span style="color:var(--tekst-licht);font-weight:400;text-transform:none">(optioneel)</span></label>
+        ${sf.afbeelding
+          ? `<div class="stap-foto-preview">
+              <img src="${esc(sf.afbeelding)}" alt="">
+              <button class="verwijder-foto" onclick="snippetFormulier.afbeelding=null;renderSnippetModal()" title="Verwijder">&#215;</button>
+            </div>`
+          : `<div class="omslag-leeg">Geen afbeelding</div>`}
+        <input type="file" accept="image/*" id="snippet-afbeelding-upload" style="display:none"
+          onchange="verwerkSnippetAfbeelding(this)">
+        <button class="btn btn-ghost btn-klein" onclick="document.getElementById('snippet-afbeelding-upload').click()">
+          &#128247; ${sf.afbeelding ? 'Andere foto' : 'Foto uploaden'}
+        </button>
+      </div>
+      <div class="snippet-formulier-acties">
+        <button class="btn btn-ghost btn-klein" onclick="annuleerSnippetFormulier()">Annuleren</button>
+        <button class="btn btn-primair btn-klein" onclick="slaEigenSnippetOp()">Opslaan</button>
+      </div>
+    </div>`;
+}
+
+function verwerkSnippetAfbeelding(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { snippetFormulier.afbeelding = e.target.result; renderSnippetModal(); };
+  reader.readAsDataURL(file);
+}
+
+function slaEigenSnippetOp() {
+  if (!snippetFormulier.naam.trim()) { alert('Geef het snippet een naam.'); return; }
+  if (!snippetFormulier.beschrijving.trim()) { alert('Voeg een beschrijving toe.'); return; }
+  aangepaste_snippets.push({
+    id: genId(),
+    naam: snippetFormulier.naam.trim(),
+    beschrijving: snippetFormulier.beschrijving.trim(),
+    afbeelding: snippetFormulier.afbeelding,
+    categorie: 'Eigen',
+    aangemaakt: Date.now()
+  });
+  slaAangepastSnippetsOp();
+  snippetMakenModus = false;
+  snippetFormulier = null;
+  renderSnippetModal();
+}
+
+function verwijderEigenSnippet(id) {
+  if (!confirm('Dit snippet verwijderen?')) return;
+  aangepaste_snippets = aangepaste_snippets.filter(s => s.id !== id);
+  slaAangepastSnippetsOp();
+  renderSnippetModal();
 }
 
 // ── Editor CRUD ──
